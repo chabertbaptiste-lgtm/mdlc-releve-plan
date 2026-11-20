@@ -107,6 +107,19 @@ input[type=search]{width:100%;font-size:16px;padding:10px;border:1px solid var(-
 .help p,.help li{font-size:15px;line-height:1.45}
 #busy{position:fixed;inset:0;z-index:80;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;font-weight:600}
 #busy.on{display:flex}
+#top{padding-left:calc(env(safe-area-inset-left,0px) + 10px);padding-right:calc(env(safe-area-inset-right,0px) + 10px)}
+#zoomctl{left:calc(env(safe-area-inset-left,0px) + 12px)}
+#fab{right:calc(env(safe-area-inset-right,0px) + 16px)}
+@media (orientation:landscape) and (max-height:520px){
+  #top{padding-top:calc(var(--top) + 3px);padding-bottom:3px}
+  #top h1{font-size:14px}
+  #top button{padding:5px 9px}
+  #banner{top:calc(var(--top) + 44px)}
+  #zoomctl{flex-direction:row;bottom:calc(var(--bot) + 10px)}
+  #zoomctl button{width:40px;height:40px}
+  #fab{width:52px;height:52px;line-height:52px;font-size:28px;bottom:calc(var(--bot) + 10px)}
+  .sheet{max-height:92vh;left:auto;right:calc(env(safe-area-inset-right,0px) + 8px);width:min(460px,60vw);border-radius:16px 16px 0 0}
+}
 @media (min-width:900px){ .sheet{left:auto;right:16px;bottom:16px;width:440px;border-radius:18px;max-height:86vh} }
 </style>
 </head>
@@ -258,16 +271,32 @@ const urlCache = new Map();    // clé blob -> objectURL
 const viewer = $("#viewer"), cv = $("#cv"), ctx = cv.getContext("2d"), pinsEl = $("#pins");
 let cw = 0, ch = 0, dpr = 1, sharpTimer = null, rafPending = false;
 
+let fitted = true;
 function resize(){
+  const ow = cw, oh = ch;
   dpr = Math.min(window.devicePixelRatio || 1, 3);
-  cw = viewer.clientWidth; ch = viewer.clientHeight;
+  const r = viewer.getBoundingClientRect();
+  cw = Math.round(r.width); ch = Math.round(r.height);
+  if (!cw || !ch) return;
   cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  if (fitted || !ow){ fit(); return; }
+  if (ow !== cw || oh !== ch){
+    // garde au centre de l'écran le même point du plan (rotation du téléphone)
+    const k = Math.min(cw / ow, ch / oh) > 1.2 || Math.max(cw / ow, ch / oh) < 0.8 ? Math.sqrt((cw * ch) / (ow * oh)) : 1;
+    const px = (ow / 2 - view.tx) / view.s, py = (oh / 2 - view.ty) / view.s;
+    view.s = Math.max(minS(), Math.min(maxS(), view.s * k));
+    view.tx = cw / 2 - px * view.s; view.ty = ch / 2 - py * view.s;
+  }
   requestDraw(true);
 }
+let fitMode = "all";   // all = plan entier, width = pleine largeur
 function fit(){
   const topH = $("#top").offsetHeight;
-  const s = Math.min(cw / W, (ch - topH) / H) * 0.96;
-  view.s = s; view.tx = (cw - W * s) / 2; view.ty = topH + (ch - topH - H * s) / 2;
+  const sAll = Math.min(cw / W, (ch - topH) / H) * 0.96, sW = cw / W;
+  const s = fitMode === "width" ? sW : sAll;
+  view.s = s; view.tx = (cw - W * s) / 2;
+  view.ty = fitMode === "width" && H * s > ch - topH ? topH : topH + (ch - topH - H * s) / 2;
+  fitted = true;
   requestDraw(true);
 }
 function minS(){ return Math.min(cw / W, ch / H) * 0.5; }
@@ -276,6 +305,7 @@ function zoomAt(f, px, py){
   const ns = Math.max(minS(), Math.min(maxS(), view.s * f));
   const k = ns / view.s;
   view.tx = px - (px - view.tx) * k; view.ty = py - (py - view.ty) * k; view.s = ns;
+  fitted = false;
   requestDraw(true);
 }
 function requestDraw(sharpLater){
@@ -358,12 +388,13 @@ viewer.addEventListener("pointermove", (e) => {
   if (g.type === "pan" && ptrs.size === 1){
     const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
     if (!g.moved && Math.hypot(dx, dy) > 8) g.moved = true;
-    if (g.moved){ view.tx = g.tx + dx; view.ty = g.ty + dy; requestDraw(true); }
+    if (g.moved){ view.tx = g.tx + dx; view.ty = g.ty + dy; fitted = false; requestDraw(true); }
   } else if (g.type === "pinch" && ptrs.size >= 2){
     const [a, b] = [...ptrs.values()];
     const d = Math.hypot(a.x-b.x, a.y-b.y), mx = (a.x + b.x)/2, my = (a.y + b.y)/2;
     const ns = Math.max(minS(), Math.min(maxS(), g.s0 * d / g.d0));
     view.s = ns; view.tx = mx - g.px * ns; view.ty = my - g.py * ns;
+    fitted = false;
     requestDraw(true);
   }
 });
@@ -430,7 +461,11 @@ $("#bannerOk").onclick = async () => {
 $("#fab").onclick = () => { closeSheets(); setMode("place"); };
 $("#zIn").onclick = () => zoomAt(1.8, cw/2, ch/2);
 $("#zOut").onclick = () => zoomAt(1/1.8, cw/2, ch/2);
-$("#zFit").onclick = fit;
+$("#zFit").onclick = () => {
+  // 1er appui : plan entier ; appui suivant : pleine largeur (et ainsi de suite)
+  if (fitted) fitMode = fitMode === "all" ? "width" : "all"; else fitMode = "all";
+  fit(); toast(fitMode === "all" ? "Plan entier" : "Pleine largeur (glisse pour voir le haut et le bas)");
+};
 
 /* ================== Feuilles ================== */
 function openSheet(id){ closeSheets(true); $(id).classList.add("on"); $("#scrim").classList.add("on"); }
@@ -651,6 +686,7 @@ function focusOn(a){
   const target = Math.max(view.s, (cw / W) * 6);
   view.s = Math.min(target, maxS());
   view.tx = cw / 2 - a.x * view.s; view.ty = ch * 0.35 - a.y * view.s;
+  fitted = false;
   requestDraw(true);
 }
 $("#bList").onclick = () => { renderList(); openSheet("#shList"); };
@@ -813,7 +849,13 @@ async function start(){
   try { idb = await openDB(); annots = await dbAll(); }
   catch(e){ toast("Stockage local indisponible (navigation privée ?). Les annotations ne seront pas gardées.", 6000); idb = null; }
   refreshCount();
-  resize(); addEventListener("resize", () => { resize(); });
+  resize();
+  // iOS met à jour la taille en plusieurs temps lors d'une rotation : on remesure plusieurs fois
+  const later = () => { resize(); setTimeout(resize, 150); setTimeout(resize, 450); };
+  addEventListener("resize", later);
+  addEventListener("orientationchange", later);
+  if (window.visualViewport) visualViewport.addEventListener("resize", later);
+  if (window.ResizeObserver) new ResizeObserver(() => resize()).observe(viewer);
   // plan vectoriel
   planImg = new Image();
   planImg.decoding = "async";
