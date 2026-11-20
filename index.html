@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Relevé MDLC">
+<meta name="theme-color" content="#14213d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Relevé plan MDLC</title>
+<style>
+:root{
+  --bg:#f4f5f7; --ink:#14213d; --muted:#5b6475; --line:#d9dde4; --card:#fff;
+  --accent:#e4572e; --accent2:#1f6feb; --ok:#2e9e5b; --warn:#d99a00;
+  --top: env(safe-area-inset-top,0px); --bot: env(safe-area-inset-bottom,0px);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+#top{position:fixed;left:0;right:0;top:0;z-index:20;padding:calc(var(--top) + 6px) 10px 6px;
+  background:var(--ink);color:#fff;display:flex;align-items:center;gap:8px}
+#top h1{font-size:16px;margin:0;font-weight:650;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top .chip{font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.14);white-space:nowrap}
+#top .chip.ok{background:rgba(46,158,91,.85)}
+#top button{background:rgba(255,255,255,.12);border:0;border-radius:10px;padding:8px 11px;font-size:14px;color:#fff}
+#viewer{position:fixed;left:0;right:0;bottom:0;top:0;touch-action:none;background:#e9ebef;overflow:hidden}
+#cv{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#pins{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.pin{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.pin .b{position:absolute;left:-14px;top:-38px;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  background:var(--accent2);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pin .n{position:absolute;left:-14px;top:-36px;width:28px;text-align:center;font-size:12px;font-weight:700;color:#fff;line-height:24px}
+.pin .d{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:#111;border:1px solid #fff}
+.pin.sel .b{background:var(--accent)}
+.pin.draft .b{background:var(--accent);animation:pulse 1s infinite alternate}
+.pin.pending .b{border-color:#ffd166}
+@keyframes pulse{from{box-shadow:0 0 0 0 rgba(228,87,46,.6)}to{box-shadow:0 0 0 10px rgba(228,87,46,0)}}
+#banner{position:fixed;left:10px;right:10px;z-index:15;top:calc(var(--top) + 58px);background:var(--ink);color:#fff;border-radius:14px;
+  padding:10px 12px;display:none;gap:8px;align-items:center;box-shadow:0 6px 18px rgba(0,0,0,.25);font-size:14px}
+#banner.on{display:flex}
+#banner span{flex:1}
+#banner button{border:0;border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.15);color:#fff;font-weight:600}
+#banner button.go{background:var(--accent)}
+#fab{position:fixed;right:16px;bottom:calc(var(--bot) + 18px);z-index:15;width:62px;height:62px;border-radius:50%;border:0;
+  background:var(--accent);color:#fff;font-size:34px;line-height:62px;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+#zoomctl{position:fixed;left:12px;bottom:calc(var(--bot) + 18px);z-index:15;display:flex;flex-direction:column;gap:8px}
+#zoomctl button{width:44px;height:44px;border-radius:12px;border:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:20px}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:5;color:var(--muted)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,.25);max-height:88vh;display:flex;flex-direction:column;transform:translateY(105%);transition:transform .22s ease}
+.sheet.on{transform:none}
+.sheet .hd{padding:12px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.sheet .hd h2{font-size:17px;margin:0;flex:1}
+.sheet .bd{padding:12px 16px;overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet .ft{padding:10px 16px calc(var(--bot) + 10px);display:flex;gap:8px;border-top:1px solid var(--line);flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:600;background:#eef0f4;font-size:15px}
+.btn.pri{background:var(--accent2);color:#fff}
+.btn.dan{background:#fde8e4;color:#b42318}
+.btn.grow{flex:1}
+.x{border:0;background:#eef0f4;border-radius:50%;width:34px;height:34px;font-size:18px}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:25;display:none}
+#scrim.on{display:block}
+textarea{width:100%;min-height:110px;font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:12px;resize:vertical}
+input[type=search]{width:100%;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 12px;font-size:14px}
+.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:10px 0 6px;font-weight:600}
+.media{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.media .m{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#dde1e7}
+.media .m img{width:100%;height:100%;object-fit:cover;display:block}
+.media .m .vid{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px}
+.media .m .del{position:absolute;right:4px;top:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:14px}
+.media .m .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:30px}
+.addm{display:flex;gap:8px;margin-top:10px}
+.addm label{flex:1;text-align:center;border:1.5px dashed #a9b1bf;border-radius:12px;padding:12px 6px;font-weight:600;font-size:14px;color:var(--ink)}
+.addm input{display:none}
+.meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+.txt{white-space:pre-wrap;font-size:16px;line-height:1.4;margin:6px 0 12px}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:#eef0f4;margin-right:6px}
+.row{display:flex;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line);align-items:flex-start}
+.row .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent2);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.row .c{flex:1;min-width:0}
+.row .t{font-size:15px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.row .s{font-size:12px;color:var(--muted);margin-top:3px}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.menu .item{display:block;width:100%;text-align:left;border:0;background:none;padding:14px 4px;border-bottom:1px solid var(--line);font-size:16px}
+.menu .item small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+#viewerMedia{position:fixed;inset:0;z-index:50;background:#000;display:none;align-items:center;justify-content:center}
+#viewerMedia.on{display:flex}
+#viewerMedia img,#viewerMedia video{max-width:100%;max-height:100%}
+#viewerMedia button{position:absolute;right:14px;top:calc(var(--top) + 12px);z-index:2;border:0;border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.2);color:#fff;font-size:20px}
+#toast{position:fixed;left:50%;bottom:calc(var(--bot) + 96px);transform:translateX(-50%);background:rgba(20,33,61,.95);color:#fff;padding:10px 14px;border-radius:12px;
+  font-size:14px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+#dlg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:20px}
+#dlg.on{display:flex}
+#dlg .box{background:#fff;border-radius:16px;padding:18px;max-width:380px;width:100%}
+#dlg .box p{margin:0 0 16px;font-size:16px;line-height:1.4}
+#dlg .box div{display:flex;gap:8px;justify-content:flex-end}
+.help p,.help li{font-size:15px;line-height:1.45}
+#busy{position:fixed;inset:0;z-index:80;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;font-weight:600}
+#busy.on{display:flex}
+@media (min-width:900px){ .sheet{left:auto;right:16px;bottom:16px;width:440px;border-radius:18px;max-height:86vh} }
+</style>
+</head>
+<body>
+<div id="viewer"><canvas id="cv"></canvas><div id="pins"></div></div>
+<div id="loading"><div style="font-size:28px">🗺️</div><div id="loadmsg">Chargement du plan…</div></div>
+
+<header id="top">
+  <h1>Relevé plan MDLC</h1>
+  <span class="chip" id="netchip">…</span>
+  <button id="bList" aria-label="Liste">☰ <span id="count">0</span></button>
+  <button id="bMenu" aria-label="Menu">⋯</button>
+</header>
+
+<div id="banner"><span id="bannerTxt"></span><button id="bannerCancel">Annuler</button><button class="go" id="bannerOk" style="display:none">Valider</button></div>
+
+<div id="zoomctl">
+  <button id="zIn" aria-label="Zoomer">＋</button>
+  <button id="zOut" aria-label="Dézoomer">－</button>
+  <button id="zFit" aria-label="Plan entier">⤢</button>
+</div>
+<button id="fab" aria-label="Nouvelle annotation">＋</button>
+
+<div id="scrim"></div>
+
+<!-- Détail -->
+<section class="sheet" id="shDetail">
+  <div class="hd"><h2 id="dTitle">Annotation</h2><button class="x" data-close>✕</button></div>
+  <div class="bd">
+    <div class="meta" id="dMeta"></div>
+    <div id="dType"></div>
+    <div class="txt" id="dText"></div>
+    <div class="media" id="dMedia"></div>
+  </div>
+  <div class="ft">
+    <button class="btn pri grow" id="dEdit">Modifier</button>
+    <button class="btn" id="dMove">Déplacer</button>
+    <button class="btn dan" id="dDel">Supprimer</button>
+  </div>
+</section>
+
+<!-- Édition -->
+<section class="sheet" id="shEdit">
+  <div class="hd"><h2 id="eTitle">Nouvelle annotation</h2><button class="x" id="eClose">✕</button></div>
+  <div class="bd">
+    <div class="lbl">Type</div>
+    <div class="chips" id="eTypes"></div>
+    <div class="lbl">Description</div>
+    <textarea id="eText" placeholder="Ex. : ajout d'un établi de 2 m × 0,8 m, à 1,5 m du mur, aligné avec la CN"></textarea>
+    <div class="lbl">Photos et vidéos</div>
+    <div class="media" id="eMedia"></div>
+    <div class="addm">
+      <label>📷 Photo<input type="file" id="ePhoto" accept="image/*" multiple></label>
+      <label>🎥 Vidéo<input type="file" id="eVideo" accept="video/*"></label>
+    </div>
+  </div>
+  <div class="ft">
+    <button class="btn" id="eCancel">Annuler</button>
+    <button class="btn pri grow" id="eSave">Enregistrer</button>
+  </div>
+</section>
+
+<!-- Liste -->
+<section class="sheet" id="shList">
+  <div class="hd"><h2>Annotations</h2><button class="x" data-close>✕</button></div>
+  <div class="bd">
+    <input type="search" id="lSearch" placeholder="Rechercher (texte, n°, type)">
+    <div id="lRows"></div>
+  </div>
+</section>
+
+<!-- Menu -->
+<section class="sheet" id="shMenu">
+  <div class="hd"><h2>Menu</h2><button class="x" data-close>✕</button></div>
+  <div class="bd menu">
+    <button class="item" id="mExport">📦 Exporter vers le PC<small>Un fichier ZIP : synthèse avec plan numéroté, tableau Excel (CSV), photos et vidéos</small></button>
+    <button class="item" id="mImport">📥 Importer un export / une sauvegarde<small>Recharge les annotations d'un ZIP exporté (autre appareil, restauration)</small></button>
+    <button class="item" id="mHelp">❓ Mode d'emploi et hors ligne<small>Installer sur l'écran d'accueil, travailler sans réseau</small></button>
+    <button class="item" id="mStore">💾 Stockage<small id="mStoreInfo">…</small></button>
+    <input type="file" id="importFile" accept=".zip,application/zip" style="display:none">
+  </div>
+</section>
+
+<!-- Aide -->
+<section class="sheet" id="shHelp">
+  <div class="hd"><h2>Mode d'emploi</h2><button class="x" data-close>✕</button></div>
+  <div class="bd help">
+    <p><b>Annoter</b> : touche ＋, puis touche le plan à l'endroit exact (zoome d'abord pour être précis). Tu peux retoucher ailleurs pour corriger, puis « Valider ». Écris le texte, ajoute photos ou vidéo, « Enregistrer ».</p>
+    <p><b>Rouvrir</b> : touche un repère numéroté, ou ☰ pour la liste complète.</p>
+    <p><b>Hors ligne</b> : ouvre le site une fois avec du réseau (Wi-Fi ou 4G), puis dans Safari touche Partager, puis « Sur l'écran d'accueil ». L'icône « Relevé MDLC » s'ouvre ensuite sans réseau dans l'atelier. Tout est enregistré dans le téléphone au fur et à mesure.</p>
+    <p><b>Récupérer sur le PC</b> : Menu, « Exporter vers le PC ». Envoie le ZIP par AirDrop, mail, OneDrive ou « Enregistrer dans Fichiers ». Sur le PC, dézippe et ouvre <i>synthese.html</i>.</p>
+    <p><b>Sauvegarde</b> : les données restent dans le téléphone (pas sur internet). Exporte régulièrement : si Safari efface ses données, l'export permet de tout réimporter.</p>
+  </div>
+</section>
+
+<div id="viewerMedia"><button id="vmClose">✕</button><div id="vmBody" style="display:contents"></div></div>
+<div id="toast"></div>
+<div id="dlg"><div class="box"><p id="dlgTxt"></p><div><button class="btn" id="dlgNo">Annuler</button><button class="btn dan" id="dlgYes">Supprimer</button></div></div></div>
+<div id="busy"><span id="busyTxt">Patiente…</span></div>
+
+<script src="jszip.min.js"></script>
+<script>
+"use strict";
+/* ================== Constantes ================== */
+const PLAN_PARTS = ["plan-1.txt", "plan-2.txt", "plan-3.txt"];
+const TYPES = ["Ajout", "Suppression", "Déplacement", "Modification", "À vérifier", "Autre"];
+const PHOTO_MAX = 2560, PHOTO_Q = 0.85, THUMB = 320;
+const $ = (s) => document.querySelector(s);
+const fmtDate = (iso) => { try { return new Date(iso).toLocaleString("fr-FR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch(e){ return iso; } };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ================== Stockage local (IndexedDB) ================== */
+let idb = null;
+function openDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("mdlc-releve", 1);
+    r.onupgradeneeded = () => { const d = r.result; d.createObjectStore("annots", {keyPath:"id"}); d.createObjectStore("blobs"); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+function tx(store, mode, fn){
+  return new Promise((res, rej) => {
+    const t = idb.transaction(store, mode); const s = t.objectStore(store); let out;
+    const r = fn(s); if (r) r.onsuccess = () => { out = r.result; };
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+  });
+}
+const dbAll = () => tx("annots", "readonly", s => s.getAll());
+const dbPut = (a) => tx("annots", "readwrite", s => s.put(a));
+const dbDel = (id) => tx("annots", "readwrite", s => s.delete(id));
+const blobPut = (k, b) => tx("blobs", "readwrite", s => s.put(b, k));
+const blobGet = (k) => tx("blobs", "readonly", s => s.get(k));
+const blobDel = (k) => tx("blobs", "readwrite", s => s.delete(k));
+
+/* ================== État ================== */
+let annots = [];               // annotations
+let W = 841.92, H = 595.32;    // taille du plan (unités SVG = points PDF)
+let view = {s:1, tx:0, ty:0};
+let mode = "view";             // view | place | move
+let draft = null;              // {x,y}
+let moveId = null;
+let selId = null;
+let editing = null;            // {id|null, x, y, type, text, media:[...], removed:[]}
+let planImg = null, lowCv = null, planText = null;
+const urlCache = new Map();    // clé blob -> objectURL
+
+/* ================== Rendu du plan ================== */
+const viewer = $("#viewer"), cv = $("#cv"), ctx = cv.getContext("2d"), pinsEl = $("#pins");
+let cw = 0, ch = 0, dpr = 1, sharpTimer = null, rafPending = false;
+
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 3);
+  cw = viewer.clientWidth; ch = viewer.clientHeight;
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  requestDraw(true);
+}
+function fit(){
+  const topH = $("#top").offsetHeight;
+  const s = Math.min(cw / W, (ch - topH) / H) * 0.96;
+  view.s = s; view.tx = (cw - W * s) / 2; view.ty = topH + (ch - topH - H * s) / 2;
+  requestDraw(true);
+}
+function minS(){ return Math.min(cw / W, ch / H) * 0.5; }
+function maxS(){ return (cw / W) * 120; }
+function zoomAt(f, px, py){
+  const ns = Math.max(minS(), Math.min(maxS(), view.s * f));
+  const k = ns / view.s;
+  view.tx = px - (px - view.tx) * k; view.ty = py - (py - view.ty) * k; view.s = ns;
+  requestDraw(true);
+}
+function requestDraw(sharpLater){
+  if (!rafPending){ rafPending = true; requestAnimationFrame(() => { rafPending = false; drawFast(); placePins(); }); }
+  clearTimeout(sharpTimer); sharpTimer = setTimeout(drawSharp, sharpLater ? 160 : 30);
+}
+function clearCv(){
+  ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = "#e9ebef"; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = "#fff"; ctx.fillRect(view.tx, view.ty, W*view.s, H*view.s);
+}
+function drawFast(){
+  if (!lowCv) return;
+  clearCv();
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(lowCv, 0, 0, lowCv.width, lowCv.height, view.tx, view.ty, W*view.s, H*view.s);
+}
+function drawSharp(){
+  if (!planImg) return;
+  // n'affiche en vectoriel que la zone visible : net à tous les zooms
+  const s = view.s;
+  const x0 = Math.max(0, -view.tx / s), y0 = Math.max(0, -view.ty / s);
+  const x1 = Math.min(W, (cw - view.tx) / s), y1 = Math.min(H, (ch - view.ty) / s);
+  if (x1 <= x0 || y1 <= y0) return;
+  clearCv();
+  try {
+    ctx.drawImage(planImg, x0, y0, x1 - x0, y1 - y0, x0*s + view.tx, y0*s + view.ty, (x1-x0)*s, (y1-y0)*s);
+  } catch(e){ drawFast(); }
+}
+
+/* ================== Repères ================== */
+function pinPos(a){ return [a.x * view.s + view.tx, a.y * view.s + view.ty]; }
+function placePins(){
+  const list = annots.filter(a => !(mode === "move" && a.id === moveId));
+  // création / mise à jour des éléments
+  const want = new Set(list.map(a => a.id));
+  for (const el of [...pinsEl.children]) if (!want.has(el.dataset.id) && el.dataset.id !== "__draft") el.remove();
+  for (const a of list){
+    let el = pinsEl.querySelector(`[data-id="${a.id}"]`);
+    if (!el){ el = document.createElement("div"); el.className = "pin"; el.dataset.id = a.id; el.innerHTML = '<div class="b"></div><div class="n"></div><div class="d"></div>'; pinsEl.appendChild(el); }
+    el.querySelector(".n").textContent = a.n;
+    el.classList.toggle("sel", a.id === selId);
+    const [x, y] = pinPos(a);
+    el.style.transform = `translate(${x}px,${y}px)`;
+    el.style.display = (x < -40 || y < -60 || x > cw + 40 || y > ch + 60) ? "none" : "";
+  }
+  let d = pinsEl.querySelector('[data-id="__draft"]');
+  if (draft){
+    if (!d){ d = document.createElement("div"); d.className = "pin draft"; d.dataset.id = "__draft"; d.innerHTML = '<div class="b"></div><div class="n">＋</div><div class="d"></div>'; pinsEl.appendChild(d); }
+    const [x, y] = pinPos(draft); d.style.transform = `translate(${x}px,${y}px)`;
+  } else if (d) d.remove();
+}
+function hitPin(px, py){
+  let best = null, bd = 26;
+  for (const a of annots){
+    const [x, y] = pinPos(a);
+    const dist = Math.hypot(px - x, py - (y - 24));
+    if (dist < bd){ bd = dist; best = a; }
+  }
+  return best;
+}
+
+/* ================== Gestes ================== */
+const ptrs = new Map();
+let g = null, lastTap = {t:0, x:0, y:0};
+viewer.addEventListener("pointerdown", (e) => {
+  viewer.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (ptrs.size === 1){
+    g = {type:"pan", sx:e.clientX, sy:e.clientY, tx:view.tx, ty:view.ty, t:performance.now(), moved:false};
+  } else if (ptrs.size === 2){
+    const [a, b] = [...ptrs.values()];
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    g = {type:"pinch", d0:Math.hypot(a.x-b.x, a.y-b.y), s0:view.s, px:(mx - view.tx)/view.s, py:(my - view.ty)/view.s, moved:true};
+  }
+});
+viewer.addEventListener("pointermove", (e) => {
+  if (!ptrs.has(e.pointerId) || !g) return;
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (g.type === "pan" && ptrs.size === 1){
+    const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+    if (!g.moved && Math.hypot(dx, dy) > 8) g.moved = true;
+    if (g.moved){ view.tx = g.tx + dx; view.ty = g.ty + dy; requestDraw(true); }
+  } else if (g.type === "pinch" && ptrs.size >= 2){
+    const [a, b] = [...ptrs.values()];
+    const d = Math.hypot(a.x-b.x, a.y-b.y), mx = (a.x + b.x)/2, my = (a.y + b.y)/2;
+    const ns = Math.max(minS(), Math.min(maxS(), g.s0 * d / g.d0));
+    view.s = ns; view.tx = mx - g.px * ns; view.ty = my - g.py * ns;
+    requestDraw(true);
+  }
+});
+function endPtr(e){
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId);
+  if (g && g.type === "pan" && !g.moved && ptrs.size === 0 && performance.now() - g.t < 500 && e.type === "pointerup"){
+    onTap(e.clientX, e.clientY);
+  }
+  if (ptrs.size === 1 && g && g.type === "pinch"){
+    const p = [...ptrs.values()][0];
+    g = {type:"pan", sx:p.x, sy:p.y, tx:view.tx, ty:view.ty, t:0, moved:true};
+  } else if (ptrs.size === 0) g = null;
+}
+viewer.addEventListener("pointerup", endPtr);
+viewer.addEventListener("pointercancel", endPtr);
+viewer.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); }, {passive:false});
+document.addEventListener("gesturestart", e => e.preventDefault());
+
+function toPlan(px, py){ return {x:(px - view.tx)/view.s, y:(py - view.ty)/view.s}; }
+function inPlan(p){ return p.x >= 0 && p.y >= 0 && p.x <= W && p.y <= H; }
+
+function onTap(px, py){
+  const now = performance.now();
+  const dbl = now - lastTap.t < 320 && Math.hypot(px - lastTap.x, py - lastTap.y) < 30;
+  lastTap = {t: dbl ? 0 : now, x:px, y:py};
+  if (mode === "place" || mode === "move"){
+    const p = toPlan(px, py);
+    if (!inPlan(p)){ toast("Touche à l'intérieur du plan"); return; }
+    draft = p; updateBanner(); requestDraw(false); return;
+  }
+  const hit = hitPin(px, py);
+  if (hit){ openDetail(hit.id); return; }
+  if (dbl) zoomAt(2.2, px, py);
+}
+
+/* ================== Bandeau (placement) ================== */
+function setMode(m, id){
+  mode = m; moveId = id || null; draft = null;
+  if (m === "move"){ const a = annots.find(x => x.id === id); draft = {x:a.x, y:a.y}; }
+  $("#fab").style.display = m === "view" ? "" : "none";
+  updateBanner(); requestDraw(false);
+}
+function updateBanner(){
+  const b = $("#banner");
+  if (mode === "view"){ b.classList.remove("on"); return; }
+  b.classList.add("on");
+  const ok = $("#bannerOk");
+  if (!draft){ $("#bannerTxt").textContent = "Zoome puis touche le plan à l'endroit exact"; ok.style.display = "none"; }
+  else { $("#bannerTxt").textContent = mode === "move" ? "Touche le nouvel emplacement, puis Valider" : "Retouche pour corriger, puis Valider"; ok.style.display = ""; }
+}
+$("#bannerCancel").onclick = () => setMode("view");
+$("#bannerOk").onclick = async () => {
+  if (!draft) return;
+  if (mode === "place"){
+    const p = draft; setMode("view");
+    openEditor(null, p);
+  } else if (mode === "move"){
+    const a = annots.find(x => x.id === moveId);
+    a.x = draft.x; a.y = draft.y; a.updatedAt = new Date().toISOString();
+    await dbPut(a); const id = a.id; setMode("view"); toast("Repère déplacé"); openDetail(id);
+  }
+};
+$("#fab").onclick = () => { closeSheets(); setMode("place"); };
+$("#zIn").onclick = () => zoomAt(1.8, cw/2, ch/2);
+$("#zOut").onclick = () => zoomAt(1/1.8, cw/2, ch/2);
+$("#zFit").onclick = fit;
+
+/* ================== Feuilles ================== */
+function openSheet(id){ closeSheets(true); $(id).classList.add("on"); $("#scrim").classList.add("on"); }
+function closeSheets(keepSel){
+  document.querySelectorAll(".sheet.on").forEach(s => s.classList.remove("on"));
+  $("#scrim").classList.remove("on");
+  if (!keepSel && selId){ selId = null; requestDraw(false); }
+}
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => closeSheets());
+$("#scrim").onclick = () => { if ($("#shEdit").classList.contains("on")) return; closeSheets(); };
+
+function toast(msg, ms){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), ms || 2200); }
+function confirmDlg(msg, yes){ return new Promise(r => { $("#dlgTxt").textContent = msg; $("#dlgYes").textContent = yes || "Supprimer"; $("#dlg").classList.add("on");
+  $("#dlgYes").onclick = () => { $("#dlg").classList.remove("on"); r(true); }; $("#dlgNo").onclick = () => { $("#dlg").classList.remove("on"); r(false); }; }); }
+function busy(on, txt){ $("#busyTxt").textContent = txt || "Patiente…"; $("#busy").classList.toggle("on", !!on); }
+
+async function blobURL(key){
+  if (urlCache.has(key)) return urlCache.get(key);
+  const b = await blobGet(key); if (!b) return null;
+  const u = URL.createObjectURL(b); urlCache.set(key, u); return u;
+}
+
+/* ---------- Détail ---------- */
+async function openDetail(id){
+  const a = annots.find(x => x.id === id); if (!a) return;
+  selId = id; requestDraw(false);
+  $("#dTitle").textContent = "Annotation n° " + a.n;
+  $("#dMeta").textContent = "Créée le " + fmtDate(a.createdAt) + (a.updatedAt !== a.createdAt ? " · modifiée le " + fmtDate(a.updatedAt) : "");
+  $("#dType").innerHTML = a.type ? `<span class="badge">${esc(a.type)}</span>` : "";
+  $("#dText").textContent = a.text || "(pas de texte)";
+  const box = $("#dMedia"); box.innerHTML = "";
+  for (const m of a.media) box.appendChild(await mediaTile(m, false));
+  openSheet("#shDetail");
+  $("#dEdit").onclick = () => openEditor(a.id);
+  $("#dMove").onclick = () => { closeSheets(true); setMode("move", a.id); };
+  $("#dDel").onclick = async () => {
+    if (!await confirmDlg(`Supprimer l'annotation n° ${a.n} et ses ${a.media.length} média(s) ?`)) return;
+    for (const m of a.media){ await blobDel(m.mid); await blobDel(m.mid + "_t"); }
+    await dbDel(a.id); annots = annots.filter(x => x.id !== a.id);
+    closeSheets(); refreshCount(); requestDraw(false); toast("Annotation supprimée");
+  };
+}
+async function mediaTile(m, removable, onRemove){
+  const d = document.createElement("div"); d.className = "m";
+  const th = await blobURL(m.mid + "_t");
+  d.innerHTML = th ? `<img src="${th}" alt="">` : `<div class="ph">${m.kind === "video" ? "🎥" : "🖼️"}</div>`;
+  if (m.kind === "video") d.insertAdjacentHTML("beforeend", `<span class="vid">▶ ${m.dur ? Math.round(m.dur) + " s" : "vidéo"}</span>`);
+  if (removable){ const x = document.createElement("button"); x.className = "del"; x.textContent = "✕"; x.onclick = (e) => { e.stopPropagation(); onRemove(); }; d.appendChild(x); }
+  d.onclick = () => showMedia(m);
+  return d;
+}
+async function showMedia(m){
+  const blob = m._blob || await blobGet(m.mid); if (!blob) { toast("Média introuvable"); return; }
+  const u = URL.createObjectURL(blob);
+  $("#vmBody").innerHTML = m.kind === "video" ? `<video src="${u}" controls playsinline autoplay></video>` : `<img src="${u}" alt="">`;
+  $("#viewerMedia").classList.add("on");
+  $("#vmClose").onclick = () => { $("#viewerMedia").classList.remove("on"); $("#vmBody").innerHTML = ""; URL.revokeObjectURL(u); };
+}
+
+/* ---------- Édition ---------- */
+function openEditor(id, pos){
+  if (id){
+    const a = annots.find(x => x.id === id);
+    editing = {id, x:a.x, y:a.y, type:a.type, text:a.text, media:a.media.map(m => ({...m})), removed:[]};
+    $("#eTitle").textContent = "Modifier n° " + a.n;
+  } else {
+    editing = {id:null, x:pos.x, y:pos.y, type:"", text:"", media:[], removed:[]};
+    draft = pos; requestDraw(false);
+    $("#eTitle").textContent = "Nouvelle annotation n° " + nextN();
+  }
+  $("#eText").value = editing.text;
+  renderTypes(); renderEditMedia();
+  openSheet("#shEdit");
+}
+function renderTypes(){
+  const box = $("#eTypes"); box.innerHTML = "";
+  for (const t of TYPES){
+    const b = document.createElement("button"); b.textContent = t; b.className = editing.type === t ? "on" : "";
+    b.onclick = () => { editing.type = editing.type === t ? "" : t; renderTypes(); };
+    box.appendChild(b);
+  }
+}
+async function renderEditMedia(){
+  const box = $("#eMedia"); box.innerHTML = "";
+  for (const m of editing.media){
+    box.appendChild(await mediaTile(m, true, () => {
+      editing.media = editing.media.filter(x => x !== m);
+      if (!m._new) editing.removed.push(m.mid);
+      renderEditMedia();
+    }));
+  }
+}
+function nextN(){ return annots.reduce((mx, a) => Math.max(mx, a.n), 0) + 1; }
+
+async function closeEditor(){
+  if (editing){
+    for (const m of editing.media) if (m._new && m._turl) URL.revokeObjectURL(m._turl);
+  }
+  editing = null; draft = null; closeSheets(); requestDraw(false);
+}
+$("#eCancel").onclick = async () => {
+  if (editing && (editing.media.some(m => m._new) || ($("#eText").value.trim() && !editing.id))){
+    if (!await confirmDlg("Abandonner cette annotation ? Le texte et les médias ajoutés seront perdus.", "Abandonner")) return;
+  }
+  closeEditor();
+};
+$("#eClose").onclick = () => $("#eCancel").onclick();
+
+$("#ePhoto").onchange = async (e) => {
+  const files = [...e.target.files]; e.target.value = "";
+  busy(true, "Préparation des photos…");
+  try { for (const f of files) editing.media.push(await preparePhoto(f)); }
+  catch(err){ toast("Photo non lisible : " + err.message, 4000); }
+  busy(false); renderEditMedia();
+};
+$("#eVideo").onchange = async (e) => {
+  const files = [...e.target.files]; e.target.value = "";
+  busy(true, "Préparation de la vidéo…");
+  try { for (const f of files) editing.media.push(await prepareVideo(f)); }
+  catch(err){ toast("Vidéo non lisible : " + err.message, 4000); }
+  busy(false); renderEditMedia();
+};
+
+function loadImage(blob){
+  return new Promise((res, rej) => { const u = URL.createObjectURL(blob); const i = new Image();
+    i.onload = () => { res(i); }; i.onerror = () => { URL.revokeObjectURL(u); rej(new Error("format non reconnu")); }; i.src = u; });
+}
+function canvasBlob(c, q){ return new Promise(r => c.toBlob(r, "image/jpeg", q)); }
+async function preparePhoto(file){
+  const img = await loadImage(file);
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  const k = Math.min(1, PHOTO_MAX / Math.max(w0, h0));
+  let main = file, mime = file.type || "image/jpeg";
+  if (k < 1 || !/jpe?g/i.test(mime)){
+    const c = document.createElement("canvas"); c.width = Math.round(w0*k); c.height = Math.round(h0*k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    main = await canvasBlob(c, PHOTO_Q); mime = "image/jpeg";
+  }
+  const kt = THUMB / Math.max(w0, h0);
+  const t = document.createElement("canvas"); t.width = Math.round(w0*kt); t.height = Math.round(h0*kt);
+  t.getContext("2d").drawImage(img, 0, 0, t.width, t.height);
+  const thumb = await canvasBlob(t, 0.75);
+  URL.revokeObjectURL(img.src);
+  const mid = "m" + uid();
+  return {mid, kind:"photo", mime, ext:"jpg", size:main.size, w:Math.round(w0*k), h:Math.round(h0*k), _new:true, _blob:main, _thumb:thumb,
+          name:file.name || "photo.jpg"};
+}
+function prepareVideo(file){
+  return new Promise((res) => {
+    const mid = "m" + uid();
+    const ext = ((file.name || "").split(".").pop() || "mov").toLowerCase().slice(0, 4);
+    const base = {mid, kind:"video", mime:file.type || "video/quicktime", ext, size:file.size, _new:true, _blob:file, _thumb:null, name:file.name || "video." + ext};
+    const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "metadata";
+    const u = URL.createObjectURL(file); let done = false;
+    const finish = (thumb) => { if (done) return; done = true; base.dur = isFinite(v.duration) ? v.duration : null; base._thumb = thumb; URL.revokeObjectURL(u); res(base); };
+    v.onloadeddata = () => { try { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); } catch(e){ finish(null); } };
+    v.onseeked = async () => {
+      try { const kt = THUMB / Math.max(v.videoWidth, v.videoHeight); const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(v.videoWidth*kt)); c.height = Math.max(1, Math.round(v.videoHeight*kt));
+        c.getContext("2d").drawImage(v, 0, 0, c.width, c.height); finish(await canvasBlob(c, 0.7)); }
+      catch(e){ finish(null); }
+    };
+    v.onerror = () => finish(null);
+    setTimeout(() => finish(null), 6000);
+    v.src = u;
+  });
+}
+
+$("#eSave").onclick = async () => {
+  if (!editing) return;
+  editing.text = $("#eText").value.trim();
+  if (!editing.text && !editing.media.length){ toast("Ajoute un texte ou un média"); return; }
+  busy(true, "Enregistrement…");
+  try {
+    const now = new Date().toISOString();
+    for (const m of editing.media){
+      if (m._new){
+        await blobPut(m.mid, m._blob);
+        if (m._thumb) await blobPut(m.mid + "_t", m._thumb);
+      }
+    }
+    for (const mid of editing.removed){ await blobDel(mid); await blobDel(mid + "_t"); urlCache.delete(mid + "_t"); }
+    const media = editing.media.map(({_new, _blob, _thumb, _turl, ...m}) => m);
+    let a;
+    if (editing.id){
+      a = annots.find(x => x.id === editing.id);
+      Object.assign(a, {type:editing.type, text:editing.text, media, updatedAt:now});
+    } else {
+      a = {id:"a" + uid(), n:nextN(), x:editing.x, y:editing.y, type:editing.type, text:editing.text, media, createdAt:now, updatedAt:now};
+      annots.push(a);
+    }
+    await dbPut(a);
+    askPersist();
+    editing = null; draft = null; busy(false);
+    refreshCount(); openDetail(a.id); toast("Annotation n° " + a.n + " enregistrée");
+  } catch(err){
+    busy(false); toast("Erreur d'enregistrement : " + (err && err.message || err) + ". Stockage du téléphone plein ?", 5000);
+  }
+};
+
+/* ---------- Liste ---------- */
+function refreshCount(){ $("#count").textContent = annots.length; }
+function renderList(){
+  const q = $("#lSearch").value.trim().toLowerCase();
+  const rows = $("#lRows"); rows.innerHTML = "";
+  const list = [...annots].sort((a, b) => a.n - b.n).filter(a => !q || (a.n + " " + a.type + " " + a.text).toLowerCase().includes(q));
+  if (!list.length){ rows.innerHTML = `<div class="empty">${annots.length ? "Aucun résultat" : "Aucune annotation pour l'instant.<br>Touche ＋ pour commencer."}</div>`; return; }
+  for (const a of list){
+    const r = document.createElement("div"); r.className = "row";
+    const np = a.media.filter(m => m.kind === "photo").length, nv = a.media.filter(m => m.kind === "video").length;
+    r.innerHTML = `<div class="num">${a.n}</div><div class="c"><div class="t">${a.type ? `<span class="badge">${esc(a.type)}</span>` : ""}${esc(a.text || "(sans texte)")}</div>
+      <div class="s">${fmtDate(a.createdAt)}${np ? " · 📷 " + np : ""}${nv ? " · 🎥 " + nv : ""}</div></div>`;
+    r.onclick = () => { closeSheets(); focusOn(a); setTimeout(() => openDetail(a.id), 250); };
+    rows.appendChild(r);
+  }
+}
+function focusOn(a){
+  const target = Math.max(view.s, (cw / W) * 6);
+  view.s = Math.min(target, maxS());
+  view.tx = cw / 2 - a.x * view.s; view.ty = ch * 0.35 - a.y * view.s;
+  requestDraw(true);
+}
+$("#bList").onclick = () => { renderList(); openSheet("#shList"); };
+$("#lSearch").oninput = renderList;
+
+/* ---------- Menu ---------- */
+$("#bMenu").onclick = async () => { openSheet("#shMenu"); updateStoreInfo(); };
+$("#mHelp").onclick = () => openSheet("#shHelp");
+$("#mStore").onclick = updateStoreInfo;
+async function updateStoreInfo(){
+  let txt = "";
+  try { const e = await navigator.storage.estimate(); txt = `${(e.usage/1048576).toFixed(1)} Mo utilisés sur ce téléphone`; } catch(e){ txt = "Information indisponible"; }
+  try { if (navigator.storage.persisted && await navigator.storage.persisted()) txt += " · stockage protégé"; } catch(e){}
+  $("#mStoreInfo").textContent = txt;
+}
+let persistAsked = false;
+async function askPersist(){ if (persistAsked) return; persistAsked = true; try { await navigator.storage.persist(); } catch(e){} }
+
+/* ================== Export ================== */
+function pad(n, l){ return String(n).padStart(l || 3, "0"); }
+function stamp(){ const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1,2) + "-" + pad(d.getDate(),2) + "_" + pad(d.getHours(),2) + "h" + pad(d.getMinutes(),2); }
+function csvCell(v){ v = String(v ?? ""); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+
+async function getPlanText(){
+  if (planText) return planText;
+  const parts = await Promise.all(PLAN_PARTS.map(u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.text(); })));
+  planText = parts.join(""); return planText;
+}
+function annotatedSVG(svg, list){
+  const r = Math.max(W, H) / 120;
+  let g = '<g id="annotations">';
+  for (const a of list){
+    g += `<g><circle cx="${a.x.toFixed(2)}" cy="${a.y.toFixed(2)}" r="${(r*0.18).toFixed(2)}" fill="#e4572e"/>`+
+         `<circle cx="${a.x.toFixed(2)}" cy="${(a.y - r*1.4).toFixed(2)}" r="${r.toFixed(2)}" fill="#1f6feb" stroke="#fff" stroke-width="${(r*0.15).toFixed(2)}"/>`+
+         `<line x1="${a.x.toFixed(2)}" y1="${a.y.toFixed(2)}" x2="${a.x.toFixed(2)}" y2="${(a.y - r*0.45).toFixed(2)}" stroke="#1f6feb" stroke-width="${(r*0.25).toFixed(2)}"/>`+
+         `<text x="${a.x.toFixed(2)}" y="${(a.y - r*1.4 + r*0.38).toFixed(2)}" font-size="${(r*1.05).toFixed(2)}" font-family="Arial" font-weight="bold" fill="#fff" text-anchor="middle">${a.n}</text></g>`;
+  }
+  g += "</g>";
+  const i = svg.lastIndexOf("</svg>");
+  return svg.slice(0, i) + g + svg.slice(i);
+}
+function synthHTML(list, files){
+  const rows = list.map(a => {
+    const med = files[a.id].map(f => f.kind === "video"
+      ? `<a class="v" href="${f.path}">🎥 ${esc(f.file)}</a>`
+      : `<a href="${f.path}"><img src="${f.path}" alt=""></a>`).join("");
+    return `<tr id="a${a.n}"><td class="n">${a.n}</td><td>${esc(a.type)}</td><td class="t">${esc(a.text)}</td>
+      <td class="d">${fmtDate(a.createdAt)}${a.updatedAt !== a.createdAt ? "<br><small>modif. " + fmtDate(a.updatedAt) + "</small>" : ""}</td>
+      <td class="d">x ${a.x.toFixed(1)}<br>y ${a.y.toFixed(1)}</td><td class="m">${med}</td></tr>`;
+  }).join("");
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Relevé plan MDLC - ${stamp()}</title>
+<style>body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#14213d}h1{font-size:22px;margin:0 0 4px}p.s{color:#5b6475;margin:0 0 16px}
+.plan{position:relative;width:100%;max-width:1600px;border:1px solid #ccd;background:#fff}.plan img{width:100%;display:block}
+.p{position:absolute;width:0;height:0;text-decoration:none}.p span{position:absolute;left:-11px;top:-30px;width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#1f6feb;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+table{border-collapse:collapse;width:100%;margin-top:24px;font-size:14px}th,td{border:1px solid #d9dde4;padding:8px;vertical-align:top;text-align:left}th{background:#14213d;color:#fff}
+td.n{font-weight:700;font-size:18px;text-align:center;width:40px}td.t{white-space:pre-wrap;min-width:240px}td.d{white-space:nowrap;color:#5b6475;font-size:12px}
+td.m img{height:110px;margin:2px;border-radius:6px}a.v{display:inline-block;margin:4px;padding:6px 10px;background:#eef0f4;border-radius:6px;text-decoration:none;color:#14213d}
+tr:target{background:#fff6d6}.lab{position:absolute;left:-11px;top:-27px;width:22px;text-align:center;color:#fff;font:700 11px Arial;pointer-events:none}
+@media print{tr{page-break-inside:avoid}.plan{page-break-after:always}}</style></head><body>
+<h1>Relevé de modifications du plan d'implantation</h1><p class="s">Export du ${new Date().toLocaleString("fr-FR")} · ${list.length} annotation(s) · fichiers : annotations.csv (Excel), plan_annote.svg (plan vectoriel avec repères), dossier medias</p>
+<div class="plan"><img src="plan.svg" alt="plan">${list.map(a => `<a class="p" href="#a${a.n}" style="left:${(a.x/W*100).toFixed(3)}%;top:${(a.y/H*100).toFixed(3)}%"><span></span><i class="lab">${a.n}</i></a>`).join("")}</div>
+<table><thead><tr><th>N°</th><th>Type</th><th>Description</th><th>Date</th><th>Position (pt)</th><th>Photos / vidéos</th></tr></thead><tbody>${rows}</tbody></table>
+</body></html>`;
+}
+
+async function buildZip(){
+  const list = [...annots].sort((a, b) => a.n - b.n);
+  const zip = new JSZip();
+  const files = {};
+  const media = zip.folder("medias");
+  for (const a of list){
+    files[a.id] = [];
+    let i = 0;
+    for (const m of a.media){
+      i++;
+      const b = await blobGet(m.mid); if (!b) continue;
+      const file = `A${pad(a.n)}_${m.kind === "video" ? "video" : "photo"}${i}.${m.ext || (m.kind === "video" ? "mov" : "jpg")}`;
+      media.file(file, b);
+      files[a.id].push({kind:m.kind, file, path:"medias/" + file, mid:m.mid});
+    }
+  }
+  const svg = await getPlanText();
+  const Z = {compression:"DEFLATE", compressionOptions:{level:6}};
+  zip.file("plan.svg", svg, Z);
+  zip.file("plan_annote.svg", annotatedSVG(svg, list), Z);
+  const head = ["N°","Type","Description","Date création","Date modification","X (pt)","Y (pt)","X (% largeur)","Y (% hauteur)","Photos","Vidéos"];
+  const lines = [head.join(";")];
+  for (const a of list){
+    const f = files[a.id];
+    lines.push([a.n, a.type, a.text, fmtDate(a.createdAt), fmtDate(a.updatedAt), a.x.toFixed(2).replace(".", ","), a.y.toFixed(2).replace(".", ","),
+      (a.x/W*100).toFixed(2).replace(".", ","), (a.y/H*100).toFixed(2).replace(".", ","),
+      f.filter(x => x.kind === "photo").map(x => x.path).join(" | "), f.filter(x => x.kind === "video").map(x => x.path).join(" | ")].map(csvCell).join(";"));
+  }
+  zip.file("annotations.csv", "﻿" + lines.join("\r\n"));
+  zip.file("annotations.json", JSON.stringify({app:"releve-plan-mdlc", version:1, exportedAt:new Date().toISOString(), plan:{width:W, height:H, units:"pt (PDF)"},
+    annotations:list.map(a => ({...a, media:a.media.map(m => ({...m, file:(files[a.id].find(f => f.mid === m.mid) || {}).path || null}))}))}, null, 2));
+  zip.file("synthese.html", synthHTML(list, files));
+  return zip.generateAsync({type:"blob", compression:"STORE"});
+}
+$("#mExport").onclick = async () => {
+  if (!annots.length){ toast("Aucune annotation à exporter"); return; }
+  busy(true, "Création de l'export…");
+  try {
+    const blob = await buildZip();
+    const name = `Releve_plan_MDLC_${stamp()}.zip`;
+    const file = new File([blob], name, {type:"application/zip"});
+    busy(false);
+    if (navigator.canShare && navigator.canShare({files:[file]})){
+      try { await navigator.share({files:[file], title:name}); toast("Export partagé"); return; }
+      catch(e){ if (e.name === "AbortError") return; }
+    }
+    const u = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = u; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000);
+    toast("Export téléchargé : " + name, 3500);
+  } catch(err){ busy(false); toast("Export impossible : " + err.message, 5000); }
+};
+
+/* ================== Import ================== */
+$("#mImport").onclick = () => $("#importFile").click();
+$("#importFile").onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  busy(true, "Import en cours…");
+  try {
+    const zip = await JSZip.loadAsync(f);
+    const j = JSON.parse(await zip.file("annotations.json").async("string"));
+    let added = 0, updated = 0;
+    for (const a of j.annotations){
+      const cur = annots.find(x => x.id === a.id);
+      if (cur && cur.updatedAt >= a.updatedAt) continue;
+      for (const m of a.media){
+        if (m.file && zip.file(m.file)){
+          const b = await zip.file(m.file).async("blob");
+          await blobPut(m.mid, new Blob([b], {type:m.mime}));
+          if (m.kind === "photo"){ try { const p = await preparePhoto(new File([b], "x.jpg", {type:m.mime})); await blobPut(m.mid + "_t", p._thumb); } catch(e){} }
+        }
+        delete m.file;
+      }
+      if (cur){ Object.assign(cur, a); updated++; } else { annots.push(a); added++; }
+      await dbPut(cur || a);
+    }
+    // renumérote en cas de doublon de numéro
+    const seen = new Set(); for (const a of [...annots].sort((x, y) => x.createdAt.localeCompare(y.createdAt))){ if (seen.has(a.n)){ a.n = nextN(); await dbPut(a); } seen.add(a.n); }
+    busy(false); refreshCount(); requestDraw(false); closeSheets();
+    toast(`Import terminé : ${added} ajoutée(s), ${updated} mise(s) à jour`, 3500);
+  } catch(err){ busy(false); toast("Fichier non reconnu : " + err.message, 5000); }
+};
+
+/* ================== Réseau / hors ligne ================== */
+function updateNet(){
+  const c = $("#netchip");
+  const offlineReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+  if (!navigator.onLine){ c.textContent = "Hors ligne"; c.className = "chip ok"; }
+  else if (offlineReady){ c.textContent = "Prêt hors ligne"; c.className = "chip ok"; }
+  else { c.textContent = "En ligne"; c.className = "chip"; }
+}
+addEventListener("online", updateNet); addEventListener("offline", updateNet);
+
+/* ================== Démarrage ================== */
+async function start(){
+  try { idb = await openDB(); annots = await dbAll(); }
+  catch(e){ toast("Stockage local indisponible (navigation privée ?). Les annotations ne seront pas gardées.", 6000); idb = null; }
+  refreshCount();
+  resize(); addEventListener("resize", () => { resize(); });
+  // plan vectoriel
+  planImg = new Image();
+  planImg.decoding = "async";
+  planImg.onload = async () => {
+    W = planImg.naturalWidth || W; H = planImg.naturalHeight || H;
+    // aperçu rapide pour les gestes (redessiné net en vectoriel à l'arrêt)
+    const lw = 3200, lh = Math.round(lw * H / W);
+    lowCv = document.createElement("canvas"); lowCv.width = lw; lowCv.height = lh;
+    const lc = lowCv.getContext("2d"); lc.fillStyle = "#fff"; lc.fillRect(0, 0, lw, lh);
+    lc.drawImage(planImg, 0, 0, lw, lh);
+    $("#loading").style.display = "none";
+    fit();
+  };
+  planImg.onerror = () => { $("#loadmsg").textContent = "Impossible de charger le plan. Ouvre le site une première fois avec du réseau."; };
+  try { const t = await getPlanText(); planImg.src = URL.createObjectURL(new Blob([t], {type:"image/svg+xml"})); }
+  catch(e){ planImg.onerror(); }
+  if ("serviceWorker" in navigator){
+    try { await navigator.serviceWorker.register("sw.js"); navigator.serviceWorker.addEventListener("controllerchange", updateNet); } catch(e){}
+    navigator.serviceWorker.ready.then(updateNet);
+  }
+  updateNet();
+}
+start();
+</script>
+</body>
+</html>
