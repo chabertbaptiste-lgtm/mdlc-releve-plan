@@ -153,9 +153,11 @@ input[type=search]{width:100%;font-size:16px;padding:10px;border:1px solid var(-
     <div id="dType"></div>
     <div class="txt" id="dText"></div>
     <div class="media" id="dMedia"></div>
+    <div id="dCotes"></div>
   </div>
   <div class="ft">
     <button class="btn pri grow" id="dEdit">Modifier</button>
+    <button class="btn" id="dCote">📏 Cotation</button>
     <button class="btn" id="dMove">Déplacer</button>
     <button class="btn dan" id="dDel">Supprimer</button>
   </div>
@@ -171,9 +173,11 @@ input[type=search]{width:100%;font-size:16px;padding:10px;border:1px solid var(-
     <textarea id="eText" placeholder="Ex. : ajout d'un établi de 2 m × 0,8 m, à 1,5 m du mur, aligné avec la CN"></textarea>
     <div class="lbl">Photos et vidéos</div>
     <div class="media" id="eMedia"></div>
+    <div class="meta" style="margin-top:8px">Qualité d'origine gardée. Pour une vidéo non recompressée par l'iPhone, passe par « Fichiers ».</div>
     <div class="addm">
       <label>📷 Photo<input type="file" id="ePhoto" accept="image/*" multiple></label>
-      <label>🎥 Vidéo<input type="file" id="eVideo" accept="video/*"></label>
+      <label>🎥 Vidéos<input type="file" id="eVideo" accept="video/*" multiple></label>
+      <label>📁 Fichiers<input type="file" id="eFile" multiple></label>
     </div>
   </div>
   <div class="ft">
@@ -195,11 +199,36 @@ input[type=search]{width:100%;font-size:16px;padding:10px;border:1px solid var(-
 <section class="sheet" id="shMenu">
   <div class="hd"><h2>Menu</h2><button class="x" data-close>✕</button></div>
   <div class="bd menu">
-    <button class="item" id="mExport">📦 Exporter vers le PC<small>Un fichier ZIP : synthèse avec plan numéroté, tableau Excel (CSV), photos et vidéos</small></button>
-    <button class="item" id="mImport">📥 Importer un export / une sauvegarde<small>Recharge les annotations d'un ZIP exporté (autre appareil, restauration)</small></button>
+    <button class="item" id="mExport">📦 Exporter vers le PC<small>En un ou plusieurs paquets ZIP : synthèse, tableaux Excel, photos et vidéos en qualité d'origine</small></button>
+    <button class="item" id="mImport">📥 Importer des paquets<small>Sur le PC : choisis tous les ZIP exportés du téléphone (plusieurs à la fois possible)</small></button>
     <button class="item" id="mHelp">❓ Mode d'emploi et hors ligne<small>Installer sur l'écran d'accueil, travailler sans réseau</small></button>
     <button class="item" id="mStore">💾 Stockage<small id="mStoreInfo">…</small></button>
-    <input type="file" id="importFile" accept=".zip,application/zip" style="display:none">
+    <input type="file" id="importFile" accept=".zip,application/zip" multiple style="display:none">
+  </div>
+</section>
+
+<!-- Cotation -->
+<section class="sheet" id="shCote">
+  <div class="hd"><h2 id="cTitle">Cotation</h2><button class="x" id="cClose">✕</button></div>
+  <div class="bd">
+    <div class="lbl">Sens de la cote</div>
+    <div class="chips" id="cModes"></div>
+    <div class="lbl">Mesure réelle (en mètres)</div>
+    <input type="text" id="cVal" inputmode="decimal" placeholder="Ex. : 1,50" style="width:100%;font-size:20px;padding:10px;border:1px solid var(--line);border-radius:12px">
+    <div class="meta" id="cInfo" style="margin-top:10px"></div>
+  </div>
+  <div class="ft">
+    <button class="btn dan" id="cDel">Supprimer</button>
+    <button class="btn pri grow" id="cSave">Enregistrer la cote</button>
+  </div>
+</section>
+
+<!-- Export -->
+<section class="sheet" id="shExport">
+  <div class="hd"><h2>Exporter vers le PC</h2><button class="x" data-close>✕</button></div>
+  <div class="bd">
+    <div class="meta" id="xInfo"></div>
+    <div id="xRows"></div>
   </div>
 </section>
 
@@ -209,9 +238,11 @@ input[type=search]{width:100%;font-size:16px;padding:10px;border:1px solid var(-
   <div class="bd help">
     <p><b>Annoter</b> : touche ＋, puis touche le plan à l'endroit exact (zoome d'abord pour être précis). Tu peux retoucher ailleurs pour corriger, puis « Valider ». Écris le texte, ajoute photos ou vidéo, « Enregistrer ».</p>
     <p><b>Rouvrir</b> : touche un repère numéroté, ou ☰ pour la liste complète.</p>
-    <p><b>Hors ligne</b> : ouvre le site une fois avec du réseau (Wi-Fi ou 4G), puis dans Safari touche Partager, puis « Sur l'écran d'accueil ». L'icône « Relevé MDLC » s'ouvre ensuite sans réseau dans l'atelier. Tout est enregistré dans le téléphone au fur et à mesure.</p>
-    <p><b>Récupérer sur le PC</b> : Menu, « Exporter vers le PC ». Envoie le ZIP par AirDrop, mail, OneDrive ou « Enregistrer dans Fichiers ». Sur le PC, dézippe et ouvre <i>synthese.html</i>.</p>
-    <p><b>Sauvegarde</b> : les données restent dans le téléphone (pas sur internet). Exporte régulièrement : si Safari efface ses données, l'export permet de tout réimporter.</p>
+    <p><b>Cotation</b> : ouvre une annotation, touche « 📏 Cotation », puis touche le second point sur le plan (mur, machine, poteau) et « Valider ». Tape ta mesure réelle en mètres. Dès que tu as saisi quelques cotes, l'appli déduit l'échelle du plan et te propose la distance calculée pour les suivantes.</p>
+    <p><b>Qualité</b> : les photos sont gardées telles quelles. Pour les vidéos, l'iPhone recompresse celles choisies dans la photothèque : pour l'original, touche « Fichiers » puis « Choisir un fichier » (enregistre d'abord la vidéo dans l'appli Fichiers depuis Photos, Partager, « Enregistrer dans Fichiers »).</p>
+    <p><b>Hors ligne</b> : ouvre le site une fois avec du réseau, puis dans Safari touche Partager, puis « Sur l'écran d'accueil ». Tout est enregistré dans le téléphone, rien ne part sur internet.</p>
+    <p><b>Récupérer sur le PC</b> : Menu, « Exporter vers le PC ». L'export est découpé en paquets ZIP : envoie chaque paquet (AirDrop, câble, mail). Sur le PC, ouvre ce même site, Menu, « Importer des paquets », et choisis tous les ZIP. Tu peux aussi dézipper tous les paquets dans un même dossier et ouvrir <i>synthese.html</i>.</p>
+    <p><b>Sauvegarde</b> : exporte régulièrement. Si Safari efface ses données, les paquets permettent de tout réimporter.</p>
   </div>
 </section>
 
@@ -322,6 +353,7 @@ function drawFast(){
   clearCv();
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
   ctx.drawImage(lowCv, 0, 0, lowCv.width, lowCv.height, view.tx, view.ty, W*view.s, H*view.s);
+  drawCotes();
 }
 function drawSharp(){
   if (!planImg) return;
@@ -333,7 +365,109 @@ function drawSharp(){
   clearCv();
   try {
     ctx.drawImage(planImg, x0, y0, x1 - x0, y1 - y0, x0*s + view.tx, y0*s + view.ty, (x1-x0)*s, (y1-y0)*s);
+    drawCotes();
   } catch(e){ drawFast(); }
+}
+
+/* ================== Cotations ================== */
+const COTE_MODES = [["libre", "Alignée"], ["h", "Horizontale"], ["v", "Verticale"]];
+let coteEdit = null;   // {aid, id|null, x2, y2, mode, value}
+function fmtM(v){ return (v == null || isNaN(v)) ? "? m" : v.toFixed(2).replace(".", ",") + " m"; }
+function coteEnd(a, c){ return c.mode === "h" ? {x:c.x2, y:a.y} : c.mode === "v" ? {x:a.x, y:c.y2} : {x:c.x2, y:c.y2}; }
+function coteLen(a, c){ const e = coteEnd(a, c); return Math.hypot(e.x - a.x, e.y - a.y); }
+function allCotes(){ const out = []; for (const a of annots) for (const c of (a.cotes || [])) out.push([a, c]); return out; }
+// échelle déduite des cotes mesurées : médiane des (mètres réels / longueur sur le plan)
+function planScale(exceptId){
+  const r = allCotes().filter(([a, c]) => c.id !== exceptId && c.value > 0 && coteLen(a, c) > 1).map(([a, c]) => c.value / coteLen(a, c)).sort((x, y) => x - y);
+  if (!r.length) return null;
+  const m = r.length % 2 ? r[(r.length - 1) / 2] : (r[r.length / 2 - 1] + r[r.length / 2]) / 2;
+  return {k:m, n:r.length};
+}
+function coteEcart(a, c){
+  const sc = planScale(c.id); if (!sc || !(c.value > 0)) return null;
+  const est = coteLen(a, c) * sc.k; return {est, pct:(c.value - est) / est * 100, n:sc.n};
+}
+function drawCotes(){
+  const list = allCotes().filter(([a, c]) => !(coteEdit && coteEdit.id === c.id));
+  if (coteEdit){ const a = annots.find(x => x.id === coteEdit.aid); if (a) list.push([a, coteEdit]); }
+  if (!list.length) return;
+  const P = (p) => [p.x * view.s + view.tx, p.y * view.s + view.ty];
+  ctx.save(); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.font = "600 12px -apple-system,Segoe UI,Arial,sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineCap = "round";
+  for (const [a, c] of list){
+    const col = c === coteEdit ? "#e4572e" : "#b0127a";
+    const [x1, y1] = P(a), e = coteEnd(a, c), [x2, y2] = P(e), [x3, y3] = P({x:c.x2, y:c.y2});
+    const L = Math.hypot(x2 - x1, y2 - y1); if (L < 3) continue;
+    ctx.strokeStyle = col; ctx.fillStyle = col;
+    if (c.mode !== "libre"){ ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x3, y3); ctx.stroke(); ctx.setLineDash([]); }
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+    for (const [px, py] of [[x1, y1], [x2, y2]]){ ctx.beginPath(); ctx.moveTo(px - uy*6, py + ux*6); ctx.lineTo(px + uy*6, py - ux*6); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(x3, y3, 3, 0, 7); ctx.fill();
+    if (L > 34){
+      const t = fmtM(c.value), w = ctx.measureText(t).width + 10, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      ctx.fillStyle = "#fff"; ctx.fillRect(mx - w/2, my - 9, w, 18); ctx.lineWidth = 1; ctx.strokeRect(mx - w/2, my - 9, w, 18);
+      ctx.fillStyle = col; ctx.fillText(t, mx, my + 0.5);
+    }
+  }
+  ctx.restore();
+}
+function renderCoteModes(){
+  const box = $("#cModes"); box.innerHTML = "";
+  for (const [k, lab] of COTE_MODES){
+    const b = document.createElement("button"); b.textContent = lab; b.className = coteEdit.mode === k ? "on" : "";
+    b.onclick = () => { coteEdit.mode = k; renderCoteModes(); requestDraw(false); };
+    box.appendChild(b);
+  }
+  const a = annots.find(x => x.id === coteEdit.aid), sc = planScale(coteEdit.id);
+  $("#cInfo").textContent = sc
+    ? `D'après le plan : environ ${fmtM(coteLen(a, coteEdit) * sc.k)} (échelle déduite de ${sc.n} cote${sc.n > 1 ? "s" : ""} mesurée${sc.n > 1 ? "s" : ""}).`
+    : "Échelle du plan pas encore connue : elle sera déduite de tes mesures.";
+}
+function openCoteEditor(aid, cote, p2){
+  const a = annots.find(x => x.id === aid); if (!a) return;
+  if (cote) coteEdit = {aid, id:cote.id, x2:cote.x2, y2:cote.y2, mode:cote.mode, value:cote.value};
+  else {
+    const dx = Math.abs(p2.x - a.x), dy = Math.abs(p2.y - a.y);
+    // sens proposé : horizontale ou verticale si le second point est presque aligné
+    coteEdit = {aid, id:null, x2:p2.x, y2:p2.y, mode: dy < dx * 0.12 ? "h" : dx < dy * 0.12 ? "v" : "libre", value:null};
+  }
+  $("#cTitle").textContent = (cote ? "Modifier la cote" : "Nouvelle cote") + " · n° " + a.n;
+  $("#cVal").value = coteEdit.value != null ? String(coteEdit.value).replace(".", ",") : "";
+  $("#cDel").style.display = cote ? "" : "none";
+  renderCoteModes(); openSheet("#shCote"); requestDraw(false);
+}
+function closeCoteEditor(){ const aid = coteEdit && coteEdit.aid; coteEdit = null; requestDraw(false); if (aid) openDetail(aid); else closeSheets(); }
+function initCoteUI(){
+  $("#cClose").onclick = closeCoteEditor;
+  $("#cSave").onclick = async () => {
+    const raw = $("#cVal").value.trim().replace(",", ".").replace(/\s*m$/i, "");
+    let v = null;
+    if (raw !== ""){ v = parseFloat(raw); if (!(v > 0) || !/^\d*\.?\d+$/.test(raw)){ toast("Mesure non comprise. Exemple : 1,50"); return; } }
+    const a = annots.find(x => x.id === coteEdit.aid); a.cotes = a.cotes || [];
+    const data = {x2:coteEdit.x2, y2:coteEdit.y2, mode:coteEdit.mode, value:v};
+    if (coteEdit.id) Object.assign(a.cotes.find(c => c.id === coteEdit.id), data); else a.cotes.push({id:"c" + uid(), ...data});
+    a.updatedAt = new Date().toISOString(); await dbPut(a);
+    toast(v == null ? "Cote enregistrée sans mesure" : "Cote enregistrée : " + fmtM(v)); closeCoteEditor();
+  };
+  $("#cDel").onclick = async () => {
+    if (!await confirmDlg("Supprimer cette cote ?")) return;
+    const a = annots.find(x => x.id === coteEdit.aid); a.cotes = (a.cotes || []).filter(c => c.id !== coteEdit.id);
+    a.updatedAt = new Date().toISOString(); await dbPut(a); closeCoteEditor();
+  };
+}
+function renderCoteList(a){
+  const box = $("#dCotes"); box.innerHTML = "";
+  if (!(a.cotes || []).length) return;
+  box.innerHTML = '<div class="lbl">Cotes</div>';
+  for (const c of a.cotes){
+    const e = coteEcart(a, c), lab = {libre:"alignée", h:"horizontale", v:"verticale"}[c.mode];
+    const r = document.createElement("div"); r.className = "row"; r.style.cursor = "pointer";
+    r.innerHTML = `<div class="num" style="background:#b0127a">📏</div><div class="c"><div class="t"><b>${fmtM(c.value)}</b> · ${lab}</div>` +
+      `<div class="s">${e ? "plan : environ " + fmtM(e.est) + (e.n >= 3 && Math.abs(e.pct) > 10 ? " ⚠ écart de " + Math.round(e.pct) + " %" : "") : (c.value > 0 ? "sert à caler l'échelle" : "mesure à saisir")}</div></div>`;
+    r.onclick = () => openCoteEditor(a.id, c);
+    box.appendChild(r);
+  }
 }
 
 /* ================== Repères ================== */
@@ -421,7 +555,7 @@ function onTap(px, py){
   const now = performance.now();
   const dbl = now - lastTap.t < 320 && Math.hypot(px - lastTap.x, py - lastTap.y) < 30;
   lastTap = {t: dbl ? 0 : now, x:px, y:py};
-  if (mode === "place" || mode === "move"){
+  if (mode === "place" || mode === "move" || mode === "cote"){
     const p = toPlan(px, py);
     if (!inPlan(p)){ toast("Touche à l'intérieur du plan"); return; }
     draft = p; updateBanner(); requestDraw(false); return;
@@ -443,7 +577,7 @@ function updateBanner(){
   if (mode === "view"){ b.classList.remove("on"); return; }
   b.classList.add("on");
   const ok = $("#bannerOk");
-  if (!draft){ $("#bannerTxt").textContent = "Zoome puis touche le plan à l'endroit exact"; ok.style.display = "none"; }
+  if (!draft){ $("#bannerTxt").textContent = mode === "cote" ? "Cotation : touche le second point (mur, machine…)" : "Zoome puis touche le plan à l'endroit exact"; ok.style.display = "none"; }
   else { $("#bannerTxt").textContent = mode === "move" ? "Touche le nouvel emplacement, puis Valider" : "Retouche pour corriger, puis Valider"; ok.style.display = ""; }
 }
 $("#bannerCancel").onclick = () => setMode("view");
@@ -452,6 +586,8 @@ $("#bannerOk").onclick = async () => {
   if (mode === "place"){
     const p = draft; setMode("view");
     openEditor(null, p);
+  } else if (mode === "cote"){
+    const p = draft, aid = moveId; setMode("view"); openCoteEditor(aid, null, p);
   } else if (mode === "move"){
     const a = annots.find(x => x.id === moveId);
     a.x = draft.x; a.y = draft.y; a.updatedAt = new Date().toISOString();
@@ -475,7 +611,7 @@ function closeSheets(keepSel){
   if (!keepSel && selId){ selId = null; requestDraw(false); }
 }
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => closeSheets());
-$("#scrim").onclick = () => { if ($("#shEdit").classList.contains("on")) return; closeSheets(); };
+$("#scrim").onclick = () => { if ($("#shEdit").classList.contains("on") || $("#shCote").classList.contains("on")) return; closeSheets(); };
 
 function toast(msg, ms){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), ms || 2200); }
 function confirmDlg(msg, yes){ return new Promise(r => { $("#dlgTxt").textContent = msg; $("#dlgYes").textContent = yes || "Supprimer"; $("#dlg").classList.add("on");
@@ -498,6 +634,8 @@ async function openDetail(id){
   $("#dText").textContent = a.text || "(pas de texte)";
   const box = $("#dMedia"); box.innerHTML = "";
   for (const m of a.media) box.appendChild(await mediaTile(m, false));
+  renderCoteList(a);
+  $("#dCote").onclick = () => { closeSheets(true); setMode("cote", a.id); };
   openSheet("#shDetail");
   $("#dEdit").onclick = () => openEditor(a.id);
   $("#dMove").onclick = () => { closeSheets(true); setMode("move", a.id); };
@@ -518,7 +656,7 @@ async function mediaTile(m, removable, onRemove){
   return d;
 }
 async function showMedia(m){
-  const blob = m._blob || await blobGet(m.mid); if (!blob) { toast("Média introuvable"); return; }
+  const blob = m._blob || await blobGet(m.mid); if (!blob) { toast("Média absent de cet appareil : importe le paquet ZIP qui le contient", 4000); return; }
   const u = URL.createObjectURL(blob);
   $("#vmBody").innerHTML = m.kind === "video" ? `<video src="${u}" controls playsinline autoplay></video>` : `<img src="${u}" alt="">`;
   $("#viewerMedia").classList.add("on");
@@ -574,20 +712,22 @@ $("#eCancel").onclick = async () => {
 };
 $("#eClose").onclick = () => $("#eCancel").onclick();
 
-$("#ePhoto").onchange = async (e) => {
-  const files = [...e.target.files]; e.target.value = "";
-  busy(true, "Préparation des photos…");
-  try { for (const f of files) editing.media.push(await preparePhoto(f)); }
-  catch(err){ toast("Photo non lisible : " + err.message, 4000); }
+async function addFiles(files, forced){
+  busy(true, "Ajout des médias…");
+  let refused = 0;
+  for (const f of files){
+    const ext = ((f.name || "").split(".").pop() || "").toLowerCase();
+    const isVid = forced === "video" || /^video\//.test(f.type) || ["mov", "mp4", "m4v", "avi", "mkv", "webm"].includes(ext);
+    const isImg = forced === "photo" || /^image\//.test(f.type) || ["jpg", "jpeg", "png", "heic", "heif", "webp", "gif"].includes(ext);
+    if (isVid) editing.media.push(await prepareVideo(f));
+    else if (isImg) editing.media.push(await preparePhoto(f));
+    else refused++;
+  }
   busy(false); renderEditMedia();
-};
-$("#eVideo").onchange = async (e) => {
-  const files = [...e.target.files]; e.target.value = "";
-  busy(true, "Préparation de la vidéo…");
-  try { for (const f of files) editing.media.push(await prepareVideo(f)); }
-  catch(err){ toast("Vidéo non lisible : " + err.message, 4000); }
-  busy(false); renderEditMedia();
-};
+  if (refused) toast(refused + " fichier(s) ignoré(s) : ni photo ni vidéo", 3500);
+}
+for (const [sel, kind] of [["#ePhoto", "photo"], ["#eVideo", "video"], ["#eFile", null]])
+  $(sel).onchange = async (e) => { const files = [...e.target.files]; e.target.value = ""; if (files.length && editing) await addFiles(files, kind); };
 
 function loadImage(blob){
   return new Promise((res, rej) => { const u = URL.createObjectURL(blob); const i = new Image();
@@ -595,28 +735,23 @@ function loadImage(blob){
 }
 function canvasBlob(c, q){ return new Promise(r => c.toBlob(r, "image/jpeg", q)); }
 async function preparePhoto(file){
-  const img = await loadImage(file);
-  const w0 = img.naturalWidth, h0 = img.naturalHeight;
-  const k = Math.min(1, PHOTO_MAX / Math.max(w0, h0));
-  let main = file, mime = file.type || "image/jpeg";
-  if (k < 1 || !/jpe?g/i.test(mime)){
-    const c = document.createElement("canvas"); c.width = Math.round(w0*k); c.height = Math.round(h0*k);
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    main = await canvasBlob(c, PHOTO_Q); mime = "image/jpeg";
-  }
-  const kt = THUMB / Math.max(w0, h0);
-  const t = document.createElement("canvas"); t.width = Math.round(w0*kt); t.height = Math.round(h0*kt);
-  t.getContext("2d").drawImage(img, 0, 0, t.width, t.height);
-  const thumb = await canvasBlob(t, 0.75);
-  URL.revokeObjectURL(img.src);
+  // l'original est gardé tel quel ; seule une vignette est fabriquée pour l'affichage
   const mid = "m" + uid();
-  return {mid, kind:"photo", mime, ext:"jpg", size:main.size, w:Math.round(w0*k), h:Math.round(h0*k), _new:true, _blob:main, _thumb:thumb,
-          name:file.name || "photo.jpg"};
+  const ext = ((file.name || "").split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "jpg";
+  let thumb = null, w = null, h = null;
+  try {
+    const img = await loadImage(file); w = img.naturalWidth; h = img.naturalHeight;
+    const kt = Math.min(1, THUMB / Math.max(w, h));
+    const t = document.createElement("canvas"); t.width = Math.max(1, Math.round(w*kt)); t.height = Math.max(1, Math.round(h*kt));
+    t.getContext("2d").drawImage(img, 0, 0, t.width, t.height);
+    thumb = await canvasBlob(t, 0.75); URL.revokeObjectURL(img.src);
+  } catch(e){}
+  return {mid, kind:"photo", mime:file.type || "image/jpeg", ext, size:file.size, w, h, _new:true, _blob:file, _thumb:thumb, name:file.name || "photo." + ext};
 }
 function prepareVideo(file){
   return new Promise((res) => {
     const mid = "m" + uid();
-    const ext = ((file.name || "").split(".").pop() || "mov").toLowerCase().slice(0, 4);
+    const ext = ((file.name || "").split(".").pop() || "mov").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4) || "mov";
     const base = {mid, kind:"video", mime:file.type || "video/quicktime", ext, size:file.size, _new:true, _blob:file, _thumb:null, name:file.name || "video." + ext};
     const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "metadata";
     const u = URL.createObjectURL(file); let done = false;
@@ -662,7 +797,7 @@ $("#eSave").onclick = async () => {
     editing = null; draft = null; busy(false);
     refreshCount(); openDetail(a.id); toast("Annotation n° " + a.n + " enregistrée");
   } catch(err){
-    busy(false); toast("Erreur d'enregistrement : " + (err && err.message || err) + ". Stockage du téléphone plein ?", 5000);
+    busy(false); toast("Erreur d'enregistrement : " + (err && err.message || err) + ". Stockage du téléphone plein ? Exporte puis supprime des annotations.", 6000);
   }
 };
 
@@ -700,6 +835,7 @@ async function updateStoreInfo(){
   let txt = "";
   try { const e = await navigator.storage.estimate(); txt = `${(e.usage/1048576).toFixed(1)} Mo utilisés sur ce téléphone`; } catch(e){ txt = "Information indisponible"; }
   try { if (navigator.storage.persisted && await navigator.storage.persisted()) txt += " · stockage protégé"; } catch(e){}
+  const sc = planScale(); if (sc) txt += ` · échelle déduite : 1 m = ${(1 / sc.k).toFixed(2).replace(".", ",")} pt (${sc.n} cote${sc.n > 1 ? "s" : ""})`;
   $("#mStoreInfo").textContent = txt;
 }
 let persistAsked = false;
@@ -724,6 +860,12 @@ function annotatedSVG(svg, list){
          `<line x1="${a.x.toFixed(2)}" y1="${a.y.toFixed(2)}" x2="${a.x.toFixed(2)}" y2="${(a.y - r*0.45).toFixed(2)}" stroke="#1f6feb" stroke-width="${(r*0.25).toFixed(2)}"/>`+
          `<text x="${a.x.toFixed(2)}" y="${(a.y - r*1.4 + r*0.38).toFixed(2)}" font-size="${(r*1.05).toFixed(2)}" font-family="Arial" font-weight="bold" fill="#fff" text-anchor="middle">${a.n}</text></g>`;
   }
+  for (const a of list) for (const c of (a.cotes || [])){
+    const e = coteEnd(a, c), mx = (a.x + e.x) / 2, my = (a.y + e.y) / 2;
+    g += `<line x1="${a.x.toFixed(2)}" y1="${a.y.toFixed(2)}" x2="${e.x.toFixed(2)}" y2="${e.y.toFixed(2)}" stroke="#b0127a" stroke-width="${(r*0.12).toFixed(2)}"/>` +
+         (c.mode !== "libre" ? `<line x1="${e.x.toFixed(2)}" y1="${e.y.toFixed(2)}" x2="${c.x2.toFixed(2)}" y2="${c.y2.toFixed(2)}" stroke="#b0127a" stroke-width="${(r*0.06).toFixed(2)}" stroke-dasharray="${(r*0.3).toFixed(2)}"/>` : "") +
+         `<text x="${mx.toFixed(2)}" y="${(my - r*0.2).toFixed(2)}" font-size="${(r*0.7).toFixed(2)}" font-family="Arial" font-weight="bold" fill="#b0127a" stroke="#fff" stroke-width="${(r*0.12).toFixed(2)}" paint-order="stroke" text-anchor="middle">${fmtM(c.value)}</text>`;
+  }
   g += "</g>";
   const i = svg.lastIndexOf("</svg>");
   return svg.slice(0, i) + g + svg.slice(i);
@@ -733,7 +875,7 @@ function synthHTML(list, files){
     const med = files[a.id].map(f => f.kind === "video"
       ? `<a class="v" href="${f.path}">🎥 ${esc(f.file)}</a>`
       : `<a href="${f.path}"><img src="${f.path}" alt=""></a>`).join("");
-    return `<tr id="a${a.n}"><td class="n">${a.n}</td><td>${esc(a.type)}</td><td class="t">${esc(a.text)}</td>
+    return `<tr id="a${a.n}"><td class="n">${a.n}</td><td>${esc(a.type)}</td><td class="t">${esc(a.text)}${(a.cotes || []).length ? "\n\n" + a.cotes.map(c => "📏 " + fmtM(c.value) + " (" + ({libre:"alignée", h:"horizontale", v:"verticale"}[c.mode]) + ")").join("\n") : ""}</td>
       <td class="d">${fmtDate(a.createdAt)}${a.updatedAt !== a.createdAt ? "<br><small>modif. " + fmtDate(a.updatedAt) + "</small>" : ""}</td>
       <td class="d">x ${a.x.toFixed(1)}<br>y ${a.y.toFixed(1)}</td><td class="m">${med}</td></tr>`;
   }).join("");
@@ -746,92 +888,172 @@ td.n{font-weight:700;font-size:18px;text-align:center;width:40px}td.t{white-spac
 td.m img{height:110px;margin:2px;border-radius:6px}a.v{display:inline-block;margin:4px;padding:6px 10px;background:#eef0f4;border-radius:6px;text-decoration:none;color:#14213d}
 tr:target{background:#fff6d6}.lab{position:absolute;left:-11px;top:-27px;width:22px;text-align:center;color:#fff;font:700 11px Arial;pointer-events:none}
 @media print{tr{page-break-inside:avoid}.plan{page-break-after:always}}</style></head><body>
-<h1>Relevé de modifications du plan d'implantation</h1><p class="s">Export du ${new Date().toLocaleString("fr-FR")} · ${list.length} annotation(s) · fichiers : annotations.csv (Excel), plan_annote.svg (plan vectoriel avec repères), dossier medias</p>
-<div class="plan"><img src="plan.svg" alt="plan">${list.map(a => `<a class="p" href="#a${a.n}" style="left:${(a.x/W*100).toFixed(3)}%;top:${(a.y/H*100).toFixed(3)}%"><span></span><i class="lab">${a.n}</i></a>`).join("")}</div>
+<h1>Relevé de modifications du plan d'implantation</h1><p class="s">Export du ${new Date().toLocaleString("fr-FR")} · ${list.length} annotation(s) · fichiers : annotations.csv et cotes.csv (Excel), plan_annote.svg (plan vectoriel avec repères et cotes), dossier medias (dézippe tous les paquets dans le même dossier)</p>
+<div class="plan"><img src="plan_annote.svg" alt="plan">${list.map(a => `<a class="p" href="#a${a.n}" style="left:${(a.x/W*100).toFixed(3)}%;top:${(a.y/H*100).toFixed(3)}%"><span></span><i class="lab">${a.n}</i></a>`).join("")}</div>
 <table><thead><tr><th>N°</th><th>Type</th><th>Description</th><th>Date</th><th>Position (pt)</th><th>Photos / vidéos</th></tr></thead><tbody>${rows}</tbody></table>
 </body></html>`;
 }
 
-async function buildZip(){
-  const list = [...annots].sort((a, b) => a.n - b.n);
-  const zip = new JSZip();
-  const files = {};
-  const media = zip.folder("medias");
+/* ZIP sans compression, assemblé par référence aux fichiers : pas de copie en mémoire, même pour de grosses vidéos */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+async function crcBlob(blob){
+  let c = 0xFFFFFFFF; const STEP = 4 * 1048576;
+  for (let o = 0; o < blob.size; o += STEP){
+    const u = new Uint8Array(await blob.slice(o, o + STEP).arrayBuffer());
+    for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 0xFF] ^ (c >>> 8);
+  }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+async function makeZip(entries, onStep){
+  const enc = new TextEncoder(), parts = [], central = [], d = new Date();
+  const dt = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dd = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let off = 0, k = 0;
+  for (const e of entries){
+    if (onStep) onStep(++k, entries.length);
+    const blob = typeof e.data === "string" ? new Blob([e.data]) : e.data, name = enc.encode(e.name), crc = await crcBlob(blob), size = blob.size;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dt, true); lh.setUint16(12, dd, true); lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true);
+    lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, name, blob);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dt, true); ch.setUint16(14, dd, true); ch.setUint32(16, crc, true); ch.setUint32(20, size, true); ch.setUint32(24, size, true);
+    ch.setUint16(28, name.length, true); ch.setUint32(42, off, true);
+    central.push(ch.buffer, name);
+    off += 30 + name.length + size;
+  }
+  const cdSize = central.reduce((n, x) => n + (x.byteLength ?? x.length), 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, end.buffer], {type:"application/zip"});
+}
+
+const PACK_MAX = 500 * 1048576, FILE_MAX = 3900 * 1048576;
+let exp = null;   // export en cours : {stamp, list, files, packs, ready, done}
+async function planExport(){
+  const list = [...annots].sort((a, b) => a.n - b.n), files = {}, packs = [[]];
+  let size = 0, skipped = 0;
   for (const a of list){
-    files[a.id] = [];
-    let i = 0;
+    files[a.id] = []; let i = 0;
     for (const m of a.media){
       i++;
       const b = await blobGet(m.mid); if (!b) continue;
+      if (b.size > FILE_MAX){ skipped++; continue; }
       const file = `A${pad(a.n)}_${m.kind === "video" ? "video" : "photo"}${i}.${m.ext || (m.kind === "video" ? "mov" : "jpg")}`;
-      media.file(file, b);
-      files[a.id].push({kind:m.kind, file, path:"medias/" + file, mid:m.mid});
+      const f = {kind:m.kind, file, path:"medias/" + file, mid:m.mid, size:b.size};
+      files[a.id].push(f);
+      if (size + b.size > PACK_MAX && packs[packs.length - 1].length){ packs.push([]); size = 0; }
+      packs[packs.length - 1].push(f); size += b.size;
     }
   }
-  const svg = await getPlanText();
-  const Z = {compression:"DEFLATE", compressionOptions:{level:6}};
-  zip.file("plan.svg", svg, Z);
-  zip.file("plan_annote.svg", annotatedSVG(svg, list), Z);
-  const head = ["N°","Type","Description","Date création","Date modification","X (pt)","Y (pt)","X (% largeur)","Y (% hauteur)","Photos","Vidéos"];
-  const lines = [head.join(";")];
-  for (const a of list){
-    const f = files[a.id];
-    lines.push([a.n, a.type, a.text, fmtDate(a.createdAt), fmtDate(a.updatedAt), a.x.toFixed(2).replace(".", ","), a.y.toFixed(2).replace(".", ","),
-      (a.x/W*100).toFixed(2).replace(".", ","), (a.y/H*100).toFixed(2).replace(".", ","),
-      f.filter(x => x.kind === "photo").map(x => x.path).join(" | "), f.filter(x => x.kind === "video").map(x => x.path).join(" | ")].map(csvCell).join(";"));
+  return {stamp:stamp(), list, files, packs, skipped, ready:null, done:new Set()};
+}
+function packName(i){ return `Releve_MDLC_${exp.stamp}_paquet${i + 1}sur${exp.packs.length}.zip`; }
+function numFr(v, n){ return v.toFixed(n).replace(".", ","); }
+async function buildPacket(i){
+  const {list, files} = exp, entries = [];
+  entries.push({name:"annotations.json", data:JSON.stringify({app:"releve-plan-mdlc", version:2, exportedAt:new Date().toISOString(), plan:{width:W, height:H, units:"pt (PDF)"},
+    paquet:i + 1, paquets:exp.packs.length, echelle:planScale(),
+    annotations:list.map(a => ({...a, media:a.media.map(m => ({...m, file:(files[a.id].find(f => f.mid === m.mid) || {}).path || null}))}))}, null, 2)});
+  if (i === 0){
+    const svg = await getPlanText(), sc = planScale();
+    entries.push({name:"plan.svg", data:svg}, {name:"plan_annote.svg", data:annotatedSVG(svg, list)});
+    const lines = [["N°","Type","Description","Cotes","Date création","Date modification","X (pt)","Y (pt)","X (% largeur)","Y (% hauteur)","X (m)","Y (m)","Photos","Vidéos"].join(";")];
+    for (const a of list){
+      const f = files[a.id];
+      lines.push([a.n, a.type, a.text, (a.cotes || []).map(c => fmtM(c.value) + " " + ({libre:"alignée", h:"horizontale", v:"verticale"}[c.mode])).join(" | "),
+        fmtDate(a.createdAt), fmtDate(a.updatedAt), numFr(a.x, 2), numFr(a.y, 2), numFr(a.x/W*100, 2), numFr(a.y/H*100, 2),
+        sc ? numFr(a.x * sc.k, 2) : "", sc ? numFr(a.y * sc.k, 2) : "",
+        f.filter(x => x.kind === "photo").map(x => x.path).join(" | "), f.filter(x => x.kind === "video").map(x => x.path).join(" | ")].map(csvCell).join(";"));
+    }
+    entries.push({name:"annotations.csv", data:"﻿" + lines.join("\r\n")});
+    const cl = [["N° annotation","Sens","Mesure réelle (m)","Longueur sur le plan (pt)","Distance d'après le plan (m)","Écart (%)","X départ (pt)","Y départ (pt)","X second point (pt)","Y second point (pt)"].join(";")];
+    for (const [a, c] of allCotes().sort((p, q) => p[0].n - q[0].n)){
+      const e = coteEcart(a, c);
+      cl.push([a.n, {libre:"alignée", h:"horizontale", v:"verticale"}[c.mode], c.value != null ? numFr(c.value, 3) : "", numFr(coteLen(a, c), 2),
+        e ? numFr(e.est, 3) : "", e ? numFr(e.pct, 1) : "", numFr(a.x, 2), numFr(a.y, 2), numFr(c.x2, 2), numFr(c.y2, 2)].map(csvCell).join(";"));
+    }
+    if (sc) cl.push("", `Échelle déduite;1 pt = ${numFr(sc.k, 5)} m;${sc.n} cote(s)`);
+    entries.push({name:"cotes.csv", data:"﻿" + cl.join("\r\n")});
+    entries.push({name:"synthese.html", data:synthHTML(list, files)});
   }
-  zip.file("annotations.csv", "﻿" + lines.join("\r\n"));
-  zip.file("annotations.json", JSON.stringify({app:"releve-plan-mdlc", version:1, exportedAt:new Date().toISOString(), plan:{width:W, height:H, units:"pt (PDF)"},
-    annotations:list.map(a => ({...a, media:a.media.map(m => ({...m, file:(files[a.id].find(f => f.mid === m.mid) || {}).path || null}))}))}, null, 2));
-  zip.file("synthese.html", synthHTML(list, files));
-  return zip.generateAsync({type:"blob", compression:"STORE"});
+  for (const f of exp.packs[i]) entries.push({name:f.path, data:await blobGet(f.mid)});
+  return makeZip(entries, (k, n) => busy(true, `Paquet ${i + 1} : fichier ${k} sur ${n}…`));
+}
+function renderExport(){
+  const tot = exp.packs.flat().reduce((n, f) => n + f.size, 0);
+  $("#xInfo").innerHTML = `${exp.list.length} annotation(s), ${exp.packs.flat().length} média(s), ${(tot / 1048576).toFixed(0)} Mo au total. ` +
+    (exp.packs.length > 1 ? `L'export est découpé en <b>${exp.packs.length} paquets</b> : envoie-les un par un, puis importe-les tous sur le PC.` : "Un seul paquet à envoyer.") +
+    (exp.skipped ? `<br>⚠ ${exp.skipped} fichier(s) de plus de 3,9 Go non exporté(s).` : "");
+  const rows = $("#xRows"); rows.innerHTML = "";
+  exp.packs.forEach((p, i) => {
+    const mb = (p.reduce((n, f) => n + f.size, 0) / 1048576 + (i === 0 ? 15 : 0)).toFixed(0);
+    const r = document.createElement("div"); r.className = "row"; r.style.alignItems = "center";
+    const ready = exp.ready && exp.ready.i === i;
+    r.innerHTML = `<div class="num" style="background:${exp.done.has(i) ? "var(--ok)" : "var(--accent2)"}">${exp.done.has(i) ? "✓" : i + 1}</div>
+      <div class="c"><div class="t">Paquet ${i + 1} sur ${exp.packs.length}</div><div class="s">${p.length} média(s) · environ ${mb} Mo${i === 0 ? " · avec synthèse et tableaux" : ""}</div></div>`;
+    const b = document.createElement("button"); b.className = "btn" + (ready ? " pri" : ""); b.textContent = ready ? "Envoyer ➜" : exp.done.has(i) ? "Refaire" : "Préparer";
+    b.onclick = () => doPacket(i);
+    r.appendChild(b); rows.appendChild(r);
+  });
+}
+async function doPacket(i){
+  try {
+    if (exp.ready && exp.ready.i === i){
+      const file = exp.ready.file;
+      try { await navigator.share({files:[file], title:file.name}); exp.done.add(i); exp.ready = null; renderExport(); }
+      catch(e){ if (e.name !== "AbortError") toast("Partage impossible : " + e.message, 4000); }
+      return;
+    }
+    const blob = await buildPacket(i), name = packName(i);
+    busy(false);
+    const file = new File([blob], name, {type:"application/zip"});
+    const touch = matchMedia("(pointer:coarse)").matches;
+    if (touch && navigator.canShare && navigator.canShare({files:[file]})){
+      exp.ready = {i, file}; renderExport(); toast("Paquet prêt : touche « Envoyer »"); return;
+    }
+    const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 120000);
+    exp.done.add(i); renderExport(); toast("Téléchargé : " + name, 3500);
+  } catch(err){ busy(false); toast("Export impossible : " + (err && err.message || err), 6000); }
 }
 $("#mExport").onclick = async () => {
   if (!annots.length){ toast("Aucune annotation à exporter"); return; }
-  busy(true, "Création de l'export…");
-  try {
-    const blob = await buildZip();
-    const name = `Releve_plan_MDLC_${stamp()}.zip`;
-    const file = new File([blob], name, {type:"application/zip"});
-    busy(false);
-    if (navigator.canShare && navigator.canShare({files:[file]})){
-      try { await navigator.share({files:[file], title:name}); toast("Export partagé"); return; }
-      catch(e){ if (e.name === "AbortError") return; }
-    }
-    const u = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = u; a.download = name;
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000);
-    toast("Export téléchargé : " + name, 3500);
-  } catch(err){ busy(false); toast("Export impossible : " + err.message, 5000); }
+  busy(true, "Préparation de l'export…");
+  try { exp = await planExport(); } catch(e){ busy(false); toast("Export impossible : " + e.message, 5000); return; }
+  busy(false); renderExport(); openSheet("#shExport");
 };
 
 /* ================== Import ================== */
 $("#mImport").onclick = () => $("#importFile").click();
 $("#importFile").onchange = async (e) => {
-  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-  busy(true, "Import en cours…");
-  try {
-    const zip = await JSZip.loadAsync(f);
-    const j = JSON.parse(await zip.file("annotations.json").async("string"));
-    let added = 0, updated = 0;
-    for (const a of j.annotations){
-      const cur = annots.find(x => x.id === a.id);
-      if (cur && cur.updatedAt >= a.updatedAt) continue;
-      for (const m of a.media){
-        if (m.file && zip.file(m.file)){
-          const b = await zip.file(m.file).async("blob");
-          await blobPut(m.mid, new Blob([b], {type:m.mime}));
-          if (m.kind === "photo"){ try { const p = await preparePhoto(new File([b], "x.jpg", {type:m.mime})); await blobPut(m.mid + "_t", p._thumb); } catch(e){} }
+  const zips = [...e.target.files]; e.target.value = ""; if (!zips.length) return;
+  let added = 0, updated = 0, medias = 0, bad = 0;
+  for (const [zi, f] of zips.entries()){
+    busy(true, `Import du paquet ${zi + 1} sur ${zips.length}…`);
+    try {
+      const zip = await JSZip.loadAsync(f);
+      const j = JSON.parse(await zip.file("annotations.json").async("string"));
+      for (const a of j.annotations){
+        for (const m of a.media){
+          if (m.file && zip.file(m.file) && !(await blobGet(m.mid))){
+            const b = new Blob([await zip.file(m.file).async("blob")], {type:m.mime});
+            await blobPut(m.mid, b); medias++;
+            if (m.kind === "photo"){ try { const p = await preparePhoto(new File([b], "x." + (m.ext || "jpg"), {type:m.mime})); if (p._thumb) await blobPut(m.mid + "_t", p._thumb); } catch(e){} }
+          }
+          delete m.file;
         }
-        delete m.file;
+        const cur = annots.find(x => x.id === a.id);
+        if (cur){ if (a.updatedAt > cur.updatedAt){ Object.assign(cur, a); await dbPut(cur); updated++; } }
+        else { annots.push(a); await dbPut(a); added++; }
       }
-      if (cur){ Object.assign(cur, a); updated++; } else { annots.push(a); added++; }
-      await dbPut(cur || a);
-    }
-    // renumérote en cas de doublon de numéro
-    const seen = new Set(); for (const a of [...annots].sort((x, y) => x.createdAt.localeCompare(y.createdAt))){ if (seen.has(a.n)){ a.n = nextN(); await dbPut(a); } seen.add(a.n); }
-    busy(false); refreshCount(); requestDraw(false); closeSheets();
-    toast(`Import terminé : ${added} ajoutée(s), ${updated} mise(s) à jour`, 3500);
-  } catch(err){ busy(false); toast("Fichier non reconnu : " + err.message, 5000); }
+    } catch(err){ bad++; }
+  }
+  const seen = new Set(); for (const a of [...annots].sort((x, y) => x.createdAt.localeCompare(y.createdAt))){ if (seen.has(a.n)){ a.n = nextN(); await dbPut(a); } seen.add(a.n); }
+  urlCache.clear();
+  busy(false); refreshCount(); requestDraw(false); closeSheets();
+  toast(`Import terminé : ${added} annotation(s) ajoutée(s), ${updated} mise(s) à jour, ${medias} média(s)` + (bad ? ` · ${bad} fichier(s) non reconnu(s)` : ""), 5000);
 };
 
 /* ================== Réseau / hors ligne ================== */
@@ -878,6 +1100,7 @@ async function start(){
   }
   updateNet();
 }
+initCoteUI();
 start();
 </script>
 </body>
